@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semantic Segment Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Ctext%20x%3D%2750%25%27%20y%3D%2750%25%27%20style%3D%27dominant-baseline:central%3Btext-anchor:middle%3Bfont-size:90px%3B%27%3E📑%3C%2Ftext%3E%3C%2Fsvg%3E">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'custom-gray': {
+                            900: '#121212', 800: '#1e1e1e', 700: '#2a2a2a', 600: '#363636',
+                            500: '#4a4a4a', 400: '#a0a0a0', 300: '#cccccc', 200: '#e0e0e0', 100: '#f5f5f5',
+                        },
+                        'custom-blue': { 500: '#3b82f6', 600: '#2563eb' },
+                        'custom-purple': { 500: '#8b5cf6', 600: '#7c3aed' },
+                        'custom-green': { 500: '#22c55e', 600: '#16a34a', 400: '#4ade80', 300: '#86efac' },
+                        'custom-teal': { 500: '#14b8a6', 600: '#0d9488', 400: '#2dd4bf' }
+                    },
+                    animation: { 'fade-in': 'fadeIn 0.5s ease-out', 'slide-up': 'slideUp 0.5s ease-out' },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: 0 }, '100%': { opacity: 1 } },
+                        slideUp: { '0%': { transform: 'translateY(20px)', opacity: 0 }, '100%': { transform: 'translateY(0)', opacity: 1 } }
+                    }
+                }
+            },
+        }
+    </script>
+    <script type="module">
+        try {
+            const { AutoModel, AutoTokenizer, Tensor } = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.1');
+            window.transformers = { AutoModel, AutoTokenizer, Tensor };
+            console.log("Hugging Face Transformers.js v3.5.1 loaded successfully.");
+            document.dispatchEvent(new CustomEvent('transformersReady'));
+        } catch (e) {
+            console.error("Error loading Hugging Face Transformers.js:", e);
+            const statusMsg = document.getElementById('status-message');
+            if (statusMsg) {
+                statusMsg.textContent = "Critical Error: Transformers.js failed to load. App cannot run.";
+                statusMsg.className = "mt-4 text-sm text-center text-red-500 dark:text-red-400";
+            } else {
+                alert("Critical Error: Transformers.js failed to load. The application cannot run.");
+            }
+        }
+    </script>
+</head>
+<body class="bg-custom-gray-100 dark:bg-custom-gray-900 text-custom-gray-900 dark:text-custom-gray-100 min-h-screen transition-colors duration-300">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-4xl">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-custom-blue-500 via-custom-purple-500 to-pink-500">
+                Semantic Segment Explorer
+                <a href="https://github.com/do-me/semantic-segment-explorer" target="_blank" style="text-decoration: none; display: inline-block;">
+                    <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    role="img"
+                    aria-labelledby="githubIconTitle"
+                    width="35" 
+                    height="35" 
+                    style="fill: grey;"
+                    >
+                    <title id="githubIconTitle">GitHub</title>
+                    <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.84 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.73.084-.73 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.333-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.4 3-.4.92 0 1.94.133 3 .4 2.28-1.552 3.295-1.23 3.295-1.23.645 1.653.24 2.873.105 3.176.77.84 1.235 1.91 1.235 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.12 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+                    </svg>
+                </a>
+            </h1>
+            <button id="theme-toggle" class="p-2 rounded-lg hover:bg-custom-gray-200 dark:hover:bg-custom-gray-700 transition-colors" aria-label="Toggle theme">
+                <svg id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+            </button>
+        </header>
+
+        <section id="intro-section" class="mb-8 p-6 bg-custom-gray-100 dark:bg-custom-gray-800 rounded-xl shadow-lg animate-fade-in">
+            <h2 class="text-xl font-semibold mb-3 text-custom-purple-500 dark:text-custom-purple-400">Welcome to the Semantic Segment Explorer!</h2>
+            <p class="text-sm text-custom-gray-700 dark:text-custom-gray-300 mb-2">
+                This is an experimental tool allowing you to input a source text, which is then broken down into numerous overlapping segments (phrases and parts of sentences).
+                Each unique segment is converted into a numerical representation (embedding) with <a href="https://huggingface.co/minishlab/potion-retrieval-32M" target="_blank" rel="noopener noreferrer" class="text-custom-blue-500 hover:underline">minishlab/potion-retrieval-32M</a>
+                running on <a href="https://github.com/huggingface/transformers.js/" target="_blank" rel="noopener noreferrer" class="text-custom-blue-500 hover:underline">transformers.js</a>. You can then query these indexed segments to find those most semantically similar to your query.
+                My main motivation to create this app was to play with different chunking/segmentation strategies. It's interesting to see that the most similar segments vary quite a lot in their length - go ahead and see for yourself!
+                 Check out <a href="https://do-me.github.io/SemanticFinder/" target="_blank" rel="noopener noreferrer" class="text-custom-blue-500 hover:underline">SemanticFinder</a> or see my other semantic search apps and demos if
+                 you're into <a href="https://geo.rocks/post/semantic-search-tutorial/#foreword-guerilla-semantic-search" target="_blank" rel="noopener noreferrer" class="text-custom-blue-500 hover:underline">Guerilla Semantic Search</a> or generally interested in this topic: <a href="https://github.com/do-me?tab=repositories&q=semantic&type=&language=&sort=" target="_blank" rel="noopener noreferrer" class="text-custom-blue-500 hover:underline">GitHub</a>.
+            </p>
+            <h3 class="text-md font-semibold mt-4 mb-2 text-custom-purple-500 dark:text-custom-purple-400">How Segmentation Works (Example)</h3>
+            <div class="text-sm text-custom-gray-700 dark:text-custom-gray-300 space-y-3">
+                <p>Imagine your input text is: <strong class="italic">"The quick brown fox."</strong></p>
+
+                <div>
+                    <p class="mb-1"><strong>1. Without Sentence Boundaries:</strong></p>
+                    <p class="mb-1">Segments are generated by taking all possible contiguous word combinations:</p>
+                    <div class="p-3 bg-custom-gray-200 dark:bg-custom-gray-700 rounded-md text-xs space-y-1">
+                        <div><span class="font-mono bg-custom-blue-100 dark:bg-custom-blue-900 px-1 rounded">The</span></div>
+                        <div><span class="font-mono bg-custom-blue-100 dark:bg-custom-blue-900 px-1 rounded">The quick</span></div>
+                        <div><span class="font-mono bg-custom-blue-100 dark:bg-custom-blue-900 px-1 rounded">The quick brown</span></div>
+                        <div><span class="font-mono bg-custom-blue-100 dark:bg-custom-blue-900 px-1 rounded">The quick brown fox.</span></div>
+                        <div><span class="font-mono bg-custom-teal-100 dark:bg-custom-teal-900 px-1 rounded">quick</span></div>
+                        <div><span class="font-mono bg-custom-teal-100 dark:bg-custom-teal-900 px-1 rounded">quick brown</span></div>
+                        <div><span class="font-mono bg-custom-teal-100 dark:bg-custom-teal-900 px-1 rounded">quick brown fox.</span></div>
+                        <div><span class="font-mono bg-custom-green-100 dark:bg-custom-green-900 px-1 rounded">brown</span></div>
+                        <div><span class="font-mono bg-custom-green-100 dark:bg-custom-green-900 px-1 rounded">brown fox.</span></div>
+                        <div><span class="font-mono bg-custom-purple-100 dark:bg-custom-purple-900 px-1 rounded">fox.</span></div>
+                    </div>
+                    <p class="text-xs mt-1 italic">(...and so on, for longer texts. Duplicate segments are removed before inferencing.)</p>
+                </div>
+
+                <div>
+                    <p class="mb-1"><strong>2. With Sentence Boundaries (Default):</strong></p>
+                    <p class="mb-1">If your text is: <strong class="italic">"The cat sat. The dog ran."</strong></p>
+                    <p class="mb-1">First, it's split into sentences:</p>
+                    <div class="flex space-x-2 mb-1">
+                        <div class="p-2 border border-custom-gray-300 dark:border-custom-gray-600 rounded-md text-xs flex-1">Sentence 1: <span class="italic">"The cat sat."</span></div>
+                        <div class="p-2 border border-custom-gray-300 dark:border-custom-gray-600 rounded-md text-xs flex-1">Sentence 2: <span class="italic">"The dog ran."</span></div>
+                    </div>
+                    <p class="mb-1">Then, segments are generated <strong class="underline">within each sentence</strong> independently, like the example above:</p>
+                    <div class="flex space-x-2">
+                        <div class="p-3 bg-custom-gray-200 dark:bg-custom-gray-700 rounded-md text-xs space-y-1 flex-1">
+                            <div class="font-semibold mb-1">From Sentence 1:</div>
+                            <div><span class="font-mono bg-custom-blue-100 dark:bg-custom-blue-900 px-1 rounded">The</span></div>
+                            <div><span class="font-mono bg-custom-blue-100 dark:bg-custom-blue-900 px-1 rounded">The cat</span></div>
+                            <div><span class="font-mono bg-custom-blue-100 dark:bg-custom-blue-900 px-1 rounded">The cat sat.</span></div>
+                            <div><span class="font-mono bg-custom-teal-100 dark:bg-custom-teal-900 px-1 rounded">cat</span></div>
+                            <div><span class="font-mono bg-custom-teal-100 dark:bg-custom-teal-900 px-1 rounded">cat sat.</span></div>
+                            <div><span class="font-mono bg-custom-green-100 dark:bg-custom-green-900 px-1 rounded">sat.</span></div>
+                        </div>
+                        <div class="p-3 bg-custom-gray-200 dark:bg-custom-gray-700 rounded-md text-xs space-y-1 flex-1">
+                            <div class="font-semibold mb-1">From Sentence 2:</div>
+                            <div><span class="font-mono bg-custom-blue-100 dark:bg-custom-blue-900 px-1 rounded">The</span></div>
+                            <div><span class="font-mono bg-custom-blue-100 dark:bg-custom-blue-900 px-1 rounded">The dog</span></div>
+                            <div><span class="font-mono bg-custom-blue-100 dark:bg-custom-blue-900 px-1 rounded">The dog ran.</span></div>
+                            <div><span class="font-mono bg-custom-teal-100 dark:bg-custom-teal-900 px-1 rounded">dog</span></div>
+                            <div><span class="font-mono bg-custom-teal-100 dark:bg-custom-teal-900 px-1 rounded">dog ran.</span></div>
+                            <div><span class="font-mono bg-custom-green-100 dark:bg-custom-green-900 px-1 rounded">ran.</span></div>
+                        </div>
+                    </div>
+                    <p class="text-xs mt-1 italic">(All these segments are then combined. Duplicate segments across the entire collection are removed before embedding.)</p>
+                </div>
+            </div>
+            <p class="text-sm text-custom-gray-700 dark:text-custom-gray-300 mb-2">
+                <h3 class="text-md font-semibold mt-4 mb-2 text-custom-purple-500 dark:text-custom-purple-400">Segment Generation Complexity</h3>
+                <ul class="list-disc list-inside text-xs ml-4 space-y-1">
+                    <li><strong>With Sentence Boundaries (default):</strong> The text is first split into S sentences. Segments are generated within each sentence. If N<sub>s</sub> is the average number of words per sentence, the number of unique segments is roughly Σ(N<sub>s,i</sub>*(N<sub>s,i</sub>+1)/2) for each sentence <i>i</i> (though duplicates across sentences or within are removed). This is generally less than O(N<sup>2</sup>).</li>
+                    <li><strong>Without Sentence Boundaries:</strong> The number of potential segments grows quadratically with the total number of words (N) in your source text, approximately N \* (N+1) / 2. After removing duplicates, the actual count may be lower but can still be substantial. This is O(N<sup>2</sup>) in terms of combinations generated.</li>
+                </ul>
+            </p>
+            <p class="text-sm text-custom-gray-700 dark:text-custom-gray-300">
+                For more details or to contribute, visit the <a href="https://github.com/do-me/semantic-segment-explorer" target="_blank" rel="noopener noreferrer" class="text-custom-blue-500 hover:underline">GitHub repository</a>.
+            </p>
+        </section>
+
+        <main class="space-y-8">
+            <section id="input-section" class="p-6 bg-custom-gray-100 dark:bg-custom-gray-800 rounded-xl shadow-2xl transition-colors duration-300 animate-fade-in">
+                <h2 class="text-2xl font-semibold mb-4 text-custom-blue-500 dark:text-custom-blue-500">1. Input Source Text</h2>
+                <p class="text-sm text-custom-gray-600 dark:text-custom-gray-400 mb-3">
+                    Enter the main body of text. Above 1000 words (equals roughly ~600k unique segments) best use sentence boundaries, otherwise the app will crash.
+                </p>
+                <textarea id="main-text" rows="6" class="w-full p-3 border border-custom-gray-300 dark:border-custom-gray-600 rounded-lg bg-white dark:bg-custom-gray-700 focus:ring-2 focus:ring-custom-blue-500 focus:border-transparent outline-none transition-colors duration-300 placeholder-custom-gray-400 dark:placeholder-custom-gray-500" placeholder="E.g., Earth Observation is crucial to society..."></textarea>
+                
+                <div class="mt-4 flex items-center space-x-4">
+                    <label for="sentence-boundaries-checkbox" class="flex items-center text-sm text-custom-gray-700 dark:text-custom-gray-300 cursor-pointer">
+                        <input type="checkbox" id="sentence-boundaries-checkbox" checked>
+                        <span class="ml-2">Use Sentence Boundaries for Segmentation</span>
+                    </label>
+                </div>
+
+                <button id="submit-text" class="mt-4 w-full bg-gradient-to-r from-custom-blue-500 to-custom-purple-600 hover:from-custom-blue-600 hover:to-custom-purple-500 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-custom-gray-100 dark:focus:ring-offset-custom-gray-800 focus:ring-custom-purple-500 disabled:opacity-50 disabled:transform-none disabled:cursor-not-allowed">
+                    Generate & Index Segments
+                </button>
+                <div id="status-message" class="mt-4 text-sm text-center text-custom-gray-600 dark:text-custom-gray-400 min-h-[20px]">Initializing embedder...</div>
+                
+                <div id="progress-bar-container" class="w-full bg-custom-gray-300 dark:bg-custom-gray-700 rounded-full h-2.5 my-2 hidden">
+                    <div id="progress-bar-fill" class="bg-custom-blue-500 h-2.5 rounded-full transition-all duration-150 ease-out" style="width: 0%"></div>
+                </div>
+                <div id="progress-message" class="mt-1 text-xs text-center text-custom-gray-500 dark:text-custom-gray-400 min-h-[16px]"></div>
+                
+                <div id="indexing-time-message" class="mt-1 text-xs text-center text-custom-gray-500 dark:text-custom-gray-400 min-h-[16px]"></div>
+                <div id="loader" class="loader hidden"></div>
+            </section>
+
+            <section id="query-section" class="p-6 bg-custom-gray-100 dark:bg-custom-gray-800 rounded-xl shadow-2xl transition-colors duration-300 hidden animate-fade-in">
+                <h2 class="text-2xl font-semibold mb-4 text-custom-green-500 dark:text-custom-green-500">2. Query Your Indexed Text</h2>
+                 <p class="text-sm text-custom-gray-600 dark:text-custom-gray-400 mb-3">Enter your query to find the most semantically similar segments.</p>
+                <input type="text" id="query-text" class="w-full p-3 border border-custom-gray-300 dark:border-custom-gray-600 rounded-lg bg-white dark:bg-custom-gray-700 focus:ring-2 focus:ring-custom-green-500 focus:border-transparent outline-none transition-colors duration-300 placeholder-custom-gray-400 dark:placeholder-custom-gray-500" placeholder="E.g., importance of Earth Observation">
+                
+                <div class="flex items-center justify-between mt-4">
+                    <div class="flex items-center space-x-3">
+                        <label for="qayt-switch" class="flex items-center cursor-pointer">
+                            <div class="relative">
+                                <input type="checkbox" id="qayt-switch" class="sr-only peer">
+                                <div class="w-10 h-6 bg-custom-gray-300 dark:bg-custom-gray-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:bg-custom-gray-700 after:border-custom-gray-300 dark:after:border-custom-gray-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-custom-blue-500"></div>
+                            </div>
+                            <span class="ml-3 text-sm font-medium text-custom-gray-700 dark:text-custom-gray-300">Query-As-You-Type</span>
+                        </label>
+                        <span id="qayt-status-info" class="text-xs text-custom-gray-500 dark:text-custom-gray-400"></span>
+                    </div>
+                    <button id="submit-query" class="bg-gradient-to-r from-custom-green-500 to-custom-teal-600 hover:from-custom-green-600 hover:to-custom-teal-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-custom-gray-100 dark:focus:ring-offset-custom-gray-800 focus:ring-custom-teal-500 disabled:opacity-50 disabled:transform-none disabled:cursor-not-allowed">
+                        Search
+                    </button>
+                </div>
+                 <div id="query-loader" class="loader hidden"></div>
+            </section>
+
+            <section id="results-section" class="p-6 bg-custom-gray-100 dark:bg-custom-gray-800 rounded-xl shadow-2xl transition-colors duration-300 hidden animate-fade-in">
+                <h2 class="text-2xl font-semibold mb-4 text-custom-purple-500 dark:text-custom-purple-500">3. Results</h2>
+                <div id="search-time-message" class="text-xs text-custom-gray-500 dark:text-custom-gray-400 mb-2 text-center"></div>
+                <div id="results-output" class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                    <p class="text-custom-gray-500 dark:text-custom-gray-400">No results yet. Perform a search to see matches.</p>
+                </div>
+            </section>
+        </main>
+
+        <footer class="text-center mt-12 py-6 border-t border-custom-gray-200 dark:border-custom-gray-700">
+            <p class="text-sm text-custom-gray-500 dark:text-custom-gray-400">Powered by <a href="https://huggingface.co/docs/transformers.js" target="_blank" rel="noopener noreferrer" class="text-custom-blue-500 hover:underline">Transformers.js</a> & <a href="https://tailwindcss.com/" target="_blank" rel="noopener noreferrer" class="text-custom-blue-500 hover:underline">Tailwind CSS</a>.</p>
+        </footer>
+    </div>
+
+    <script type="module" src="main.js"></script>
+</body>
+</html>
