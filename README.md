@@ -67,14 +67,22 @@ If you're interested in semantic search or similar in-browser AI applications, y
 
 ## 🤝 Contributing
 
-While this demo is mainly experimental I don't intend on developing it further. Still, your contributions are more than welcome! 
+This demo is mainly experimental and I don't intend on developing it much further. Still, your contributions are more than welcome! 
 
 ## 📜 License
 
 Distributed under the MIT License.
+
+---
+
+## 📸 Screenshot
+
+![image](https://github.com/user-attachments/assets/eff24e35-1ea1-4cf6-bf6b-aabf1815430f)
+
 
 ## 🙏 Acknowledgements
 
 *   Xenova and [Hugging Face](https://huggingface.co/) for their incredible `transformers.js` library and model hosting.
 *   The creators of the [minishlab/potion-retrieval-32M](https://huggingface.co/minishlab/potion-retrieval-32M) for creating super fast static embeddings
 *   [Tailwind CSS](https://tailwindcss.com/)
+*   Gemini 2.5 Pro for quickly creating the UI skeleton. The inferencing code actually stems from here: https://www.reddit.com/r/LocalLLaMA/comments/1glwbsq/using_highthroughput_model2vecpotion_embedding/ & here: https://github.com/MinishLab/model2vec/issues/75. Without these snippets Gemini did not succeed in creating a fully working app.
