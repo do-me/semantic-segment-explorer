@@ -47,7 +47,7 @@ The main motivation behind this app is to experiment with different text chunkin
 
 ## 🚀 Getting Started / How to Use
 
-1.  **Visit the Live Demo:** [YOUR_DEMO_URL_HERE]
+1.  **Visit the Live Demo: https://do-me.github.io/semantic-segment-explorer/**
 2.  **Input Source Text:** Paste your text into the main textarea.
 3.  **Choose Segmentation Strategy:** Decide whether to use sentence boundaries (checked by default, recommended for longer texts).
 4.  **Generate & Index:** Click the "Generate & Index Segments" button. Wait for the processing to complete (progress will be shown).
