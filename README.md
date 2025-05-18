@@ -2,7 +2,7 @@
 
 **Live Demo: https://do-me.github.io/semantic-segment-explorer/**
 
-In-browser tool to explore semantic similarity by generating and querying overlapping text segments using Transformers.js. This application allows you to input a source text, which is then broken down into numerous overlapping segments. Each unique segment is embedded using `minishlab/potion-retrieval-32M`, and you can then query these segments to find those most semantically similar to your query.
+In-browser tool to explore semantic similarity by generating overlapping text segments or N-grams and querying them using Transformers.js. This application allows you to input a source text, which is then broken down into numerous overlapping segments. Each unique segment is embedded using `minishlab/potion-retrieval-32M`, and you can then query these segments to find those most semantically similar to your query.
 
 The main motivation behind this app is to experiment with different text chunking/segmentation strategies and observe how the semantic similarity results vary, especially with segments of different lengths.
 
